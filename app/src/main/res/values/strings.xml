@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Vivid TV</string>
+
+    <string name="splash_days">days</string>
+    <string name="line_name">线路%d(%s)</string>
+    <string name="exit_tip">再按一次退出</string>
+    <string name="cant_play_tip">该频道无法播放</string>
+    <string name="try_other_line_tip">正在尝试其他线路…</string>
+</resources>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+
+    <color name="gray">@android:color/darker_gray</color>
+    <color name="orange">@android:color/holo_orange_dark</color>
+    <color name="holo_blue_dark">#006DCC</color>
+    <color name="holo_blue_light">#0397C7</color>
+    <color name="holo_blue_bright">#00C8F8</color>
+
+    <color name="tip_bg">#FFAF0F</color>
+    <color name="main_color">#89B929</color>
+    <color name="main_pre_color">#81B121</color>
+    <color name="white_color">#FFFFFF</color>
+    <color name="drawer_bg_color">#80000000</color>
+    <color name="info_bg_color">#c00099cc</color>
+
+    <color name="text_hint_color">#C4C5CE</color>
+    <color name="text_info_color">#A6A8B6</color>
+</resources>
