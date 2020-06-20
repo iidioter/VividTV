@@ -3,13 +3,13 @@ package com.lvvi.vividtv.service
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
-import com.lvvi.vividtv.entity.Entity
 import com.lvvi.vividtv.model.ChannelInfoModel
 import com.lvvi.vividtv.model.VideoDataModelNew
 import com.lvvi.vividtv.utils.HttpHelper
 import com.lvvi.vividtv.utils.MySharePreferences
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.lvvi.vividtv.utils.Constant
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -33,7 +33,7 @@ class UpdateChannelInfoService : Service() {
     }
 
     private fun getChannelInfo() {
-        HttpHelper.get().request(Entity.CHANNEL_INFO_API_ALL, object : HttpHelper.HttpCallBack {
+        HttpHelper.get().request(Constant.CHANNEL_INFO_API_ALL, object : HttpHelper.HttpCallBack {
             override fun onSuccess(result: String) {
                 updateChannelInfo(result)
             }
@@ -57,7 +57,7 @@ class UpdateChannelInfoService : Service() {
             gson = Gson()
         }
 
-        val mediaData = sharedPreferences!!.getString(Entity.MEDIA_DATA)
+        val mediaData = sharedPreferences!!.getString(Constant.MEDIA_DATA)
         if (mediaData != "") {
             channelsBeans = gson!!.fromJson(mediaData,
                     object : TypeToken<List<VideoDataModelNew>>() {
@@ -79,7 +79,7 @@ class UpdateChannelInfoService : Service() {
         nextUpdateTime = 0
 
         for (i in channelsBeans.indices) {
-            for (j in 0 until channelInfoModel.EPG!!.size) {
+            for (j in channelInfoModel.EPG!!.indices) {
                 if (channelsBeans[i].id == channelInfoModel.EPG!![j].channelId) {
                     channelsBeans[i].title = channelInfoModel.EPG!![j].title
                     channelsBeans[i].startTime = channelInfoModel.EPG!![j].startTime
@@ -96,7 +96,7 @@ class UpdateChannelInfoService : Service() {
 
             }
         }
-        sharedPreferences!!.putString(Entity.MEDIA_DATA, gson!!.toJson(channelsBeans))
+        sharedPreferences!!.putString(Constant.MEDIA_DATA, gson!!.toJson(channelsBeans))
 
         val delay = 2 * 60 * 1000
         nextUpdateTime += delay.toLong()

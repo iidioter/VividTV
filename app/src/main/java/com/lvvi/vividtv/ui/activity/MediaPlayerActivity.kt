@@ -1,11 +1,14 @@
 package com.lvvi.vividtv.ui.activity
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.media.MediaPlayer
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Message
@@ -14,6 +17,7 @@ import android.util.DisplayMetrics
 import android.util.Log
 import android.view.*
 import android.widget.*
+import androidx.core.content.ContextCompat
 import com.airbnb.lottie.LottieAnimationView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
@@ -27,7 +31,6 @@ import java.lang.ref.WeakReference
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.abs
-import kotlin.math.max
 import kotlin.math.round
 
 class MediaPlayerActivity : Activity(),
@@ -69,23 +72,17 @@ class MediaPlayerActivity : Activity(),
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_media_player)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        setContentView(R.layout.activity_media_player)
+
         initView()
         initData()
     }
 
     override fun onResume() {
+        Log.e("media player activity", "onResume")
         super.onResume()
-        hideVirtualButton()
         initPlayer()
-    }
-
-    private fun hideVirtualButton() {
-        val decorView = window.decorView
-        val uiOptions = (View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or View.SYSTEM_UI_FLAG_FULLSCREEN)
-        decorView.systemUiVisibility = uiOptions
     }
 
     private fun initView() {
@@ -94,8 +91,6 @@ class MediaPlayerActivity : Activity(),
         windowManager.defaultDisplay.getMetrics(metrics)
         val screenWidth = metrics.widthPixels
         val screenHeight = metrics.heightPixels
-        Log.e("media player activity", "screenWidth: $screenWidth")
-        Log.e("media player activity", "screenHeight: $screenHeight")
 
         val videoSv = findViewById<SurfaceView>(R.id.video_sv)
         val surfaceHolder = videoSv.holder
@@ -154,8 +149,42 @@ class MediaPlayerActivity : Activity(),
             override fun onNothingSelected(adapterView: AdapterView<*>) {}
         }
 
+        handler = MyHandler(this@MediaPlayerActivity)
+
         //phone
-        setSettingsListener(screenWidth, screenHeight)
+        nameLv.setOnScrollListener(object : AbsListView.OnScrollListener {
+            override fun onScroll(view: AbsListView?, firstVisibleItem: Int, visibleItemCount: Int, totalItemCount: Int) {
+                if (handler.hasMessages(HANDLER_AUTO_CLOSE_MENU)) {
+                    handler.removeMessages(HANDLER_AUTO_CLOSE_MENU)
+                }
+                handler.sendEmptyMessageDelayed(HANDLER_AUTO_CLOSE_MENU, AUTO_CLOSE_MENU_DELAY.toLong())
+            }
+
+            override fun onScrollStateChanged(view: AbsListView?, scrollState: Int) {
+            }
+        })
+
+        //phone
+        if (isPermissionEnabled()) {
+            setSettingsListener(screenWidth, screenHeight)
+        } else {
+            mainRl.setOnClickListener {
+                if (nameRl.visibility == View.GONE) {
+                    openMenu()
+                } else {
+                    closeMenu()
+                }
+            }
+        }
+    }
+
+    private fun isPermissionEnabled(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return Settings.System.canWrite(this)
+        } else {
+            ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_SETTINGS) ==
+                    PackageManager.PERMISSION_GRANTED
+        }
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -172,9 +201,8 @@ class MediaPlayerActivity : Activity(),
         var minValue = 0
         var maxValue = 0
         var lastMovingDistance = 0f
-        var times = 1
+        var percent = 1
         val originalMode = Settings.System.getInt(contentResolver, Settings.System.SCREEN_BRIGHTNESS_MODE)
-        Log.e("media player activity", "originalMode: $originalMode")
 
         val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
@@ -190,9 +218,7 @@ class MediaPlayerActivity : Activity(),
                         maxValue = 255
                         isLightChanging = true
                         settingLottieAnimationView.setAnimation("player_brightness_icon_lottie.json")
-                        times = 1
-                        settingSeekBar.max = maxValue * times
-
+                        percent = 1
                     }
                     if (event.x > screenWidth / 2 && event.x < screenWidth - 100
                         && event.y > 100 && event.y < screenHeight - 100) {
@@ -200,37 +226,28 @@ class MediaPlayerActivity : Activity(),
                         currentValue = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat()
                         minValue = 1 / 10
                         maxValue = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-                        Log.e("media player activity", "maxValue: $maxValue")
                         isLightChanging = false
                         settingLottieAnimationView.setAnimation("player_volume_icon_progress_lottie.json")
-                        times = 20
-                        settingSeekBar.max = maxValue * times
+                        percent = 20
                     }
+                    settingSeekBar.max = maxValue * percent
                     startX = event.x
                     startY = event.y
                 }
                 MotionEvent.ACTION_MOVE -> {
                     if (currentValue >= 0) {
-                        if (abs(event.y - startY) > 0) {
+                        if (abs(event.y - startY) > 10) {
                             settingLl.visibility = View.VISIBLE
                             if (handler.hasMessages(HANDLER_AUTO_CLOSE_SETTINGS)) {
                                 handler.removeMessages(HANDLER_AUTO_CLOSE_SETTINGS)
                             }
                         }
 
-                        currentValue += if (isLightChanging) {
-                            if (abs(event.y - startY) > lastMovingDistance) {
-                                -(event.y - startY) / 10 * maxValue / screenHeight
+                        currentValue += if (abs(event.y - startY) > lastMovingDistance) {
+                                -(event.y - startY) / 20 * maxValue / screenHeight
                             } else {
-                                (event.y - startY) / 10 * maxValue / screenHeight
+                                (event.y - startY) / 20 * maxValue / screenHeight
                             }
-                        } else {
-                            if (abs(event.y - startY) > lastMovingDistance) {
-                                -(event.y - startY) / 10 * maxValue / screenHeight
-                            } else {
-                                (event.y - startY) / 10 * maxValue / screenHeight
-                            }
-                        }
 
                         if (currentValue < minValue) {
                             currentValue = minValue.toFloat()
@@ -253,14 +270,14 @@ class MediaPlayerActivity : Activity(),
 
                         if (settingLl.visibility == View.VISIBLE) {
                             settingLottieAnimationView.progress = currentValue / maxValue
-                            settingSeekBar.progress = (currentValue * times).toInt()
+                            settingSeekBar.progress = (currentValue * percent).toInt()
                         }
                     }
 
                     lastMovingDistance = abs(event.y - startY)
                 }
                 MotionEvent.ACTION_UP -> {
-                    if (abs(event.x - startX) > 0f || abs(event.y - startY) > 0f) {
+                    if (abs(event.x - startX) > 10 || abs(event.y - startY) > 10) {
                         currentValue = -1f
 
                         Settings.System.putInt(contentResolver,
@@ -308,7 +325,7 @@ class MediaPlayerActivity : Activity(),
 
     private fun initData() {
         simpleDateFormat = SimpleDateFormat("HH:mm", Locale.CHINA)
-        handler = MyHandler(this@MediaPlayerActivity)
+
         toast = Toast.makeText(this@MediaPlayerActivity, R.string.app_name, Toast.LENGTH_LONG)
 
         currUrl = DEFAULT_VIDEO_URL
@@ -594,6 +611,7 @@ class MediaPlayerActivity : Activity(),
     }
 
     override fun onPause() {
+        Log.e("media player activity", "onPause")
         super.onPause()
         if (mediaPlayer != null) {
             if (mediaPlayer?.isPlaying!!) {
@@ -603,8 +621,12 @@ class MediaPlayerActivity : Activity(),
     }
 
     override fun onStop() {
+        Log.e("media player activity", "onStop")
         super.onStop()
         closeMenu()
+        if (handler.hasMessages(HANDLER_AUTO_CLOSE_INFO)) {
+            handler.removeMessages(HANDLER_AUTO_CLOSE_INFO)
+        }
         if (mediaPlayer != null) {
             if (mediaPlayer?.isPlaying!!) {
                 mediaPlayer?.stop()

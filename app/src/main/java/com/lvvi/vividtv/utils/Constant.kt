@@ -1,15 +1,14 @@
-package com.lvvi.vividtv.entity
+package com.lvvi.vividtv.utils
 
-/**
- * Created by lvliheng on 2018/7/12 at 18:38.
- */
-object Entity {
+object Constant {
 
     const val SHARE_PREFERENCES_NAME = "share_preferences_data"
 
     const val MEDIA_DATA = "media_data"
     const val LAST_MEDIA_ID = "last_media_id"
     const val LAST_MEDIA_URL = "last_media_url"
+
+    const val NEED_CHECK_PERMISSION = "need_check_permission"
 
     private const val CCTV_1 = "cctv1"
     private const val CCTV_2 = "cctv2"
@@ -53,5 +52,4 @@ object Entity {
     const val AVOBJECT_URL1 = "url1"
     const val AVOBJECT_URL2 = "url2"
     const val IS_SHOW = "is_show"
-
 }

@@ -3,7 +3,6 @@ package com.lvvi.vividtv.utils
 import android.content.Context
 import android.content.SharedPreferences
 
-import com.lvvi.vividtv.entity.Entity
 
 /**
  * Created by lvliheng on 2018/7/12 at 18:38.
@@ -37,7 +36,7 @@ class MySharePreferences private constructor() {
         fun getInstance(context: Context): MySharePreferences {
             if (mySharePreferences == null) {
                 mySharePreferences = MySharePreferences()
-                sharedPreferences = context.getSharedPreferences(Entity.SHARE_PREFERENCES_NAME, Context.MODE_PRIVATE)
+                sharedPreferences = context.getSharedPreferences(Constant.SHARE_PREFERENCES_NAME, Context.MODE_PRIVATE)
                 editor = sharedPreferences!!.edit()
             }
             return mySharePreferences as MySharePreferences

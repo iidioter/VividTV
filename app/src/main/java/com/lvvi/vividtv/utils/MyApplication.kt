@@ -6,7 +6,6 @@ import android.content.Intent
 import cn.leancloud.AVOSCloud
 import cn.leancloud.AVObject
 import cn.leancloud.AVQuery
-import com.lvvi.vividtv.entity.Entity
 import com.lvvi.vividtv.model.VideoDataModelNew
 import com.lvvi.vividtv.service.UpdateChannelInfoService
 import com.google.gson.Gson
@@ -32,7 +31,7 @@ class MyApplication : Application() {
     }
 
     private fun init() {
-        AVOSCloud.initialize(this, Entity.LEANCLOUD_APP_ID, Entity.LEANCLOUD_APP_KEY)
+        AVOSCloud.initialize(this, Constant.LEANCLOUD_APP_ID, Constant.LEANCLOUD_APP_KEY)
 
         context = this
         sharedPreferences = MySharePreferences.getInstance(context)
@@ -40,9 +39,9 @@ class MyApplication : Application() {
     }
 
     private fun setVideoData() {
-        val query = AVQuery<AVObject>(Entity.AVOBJECT_CLASS_NAME)
-        query.addAscendingOrder(Entity.AVOBJECT_ORDER)
-        query.whereEqualTo(Entity.IS_SHOW, "1")
+        val query = AVQuery<AVObject>(Constant.AVOBJECT_CLASS_NAME)
+        query.addAscendingOrder(Constant.AVOBJECT_ORDER)
+        query.whereEqualTo(Constant.IS_SHOW, "1")
 
         query.findInBackground().subscribe(object : Observer<List<AVObject>> {
             override fun onSubscribe(d: Disposable) {
@@ -53,11 +52,11 @@ class MyApplication : Application() {
                 var videoData : VideoDataModelNew?
                 for (avObject in avObjects) {
                     videoData = VideoDataModelNew()
-                    videoData.id = avObject.getString(Entity.AVOBJECT_ID)
-                    videoData.name = avObject.getString(Entity.AVOBJECT_NAME)
-                    videoData.icon = avObject.getString(Entity.AVOBJECT_ICON)
-                    videoData.url1 = avObject.getString(Entity.AVOBJECT_URL1)
-                    videoData.url2 = avObject.getString(Entity.AVOBJECT_URL2)
+                    videoData.id = avObject.getString(Constant.AVOBJECT_ID)
+                    videoData.name = avObject.getString(Constant.AVOBJECT_NAME)
+                    videoData.icon = avObject.getString(Constant.AVOBJECT_ICON)
+                    videoData.url1 = avObject.getString(Constant.AVOBJECT_URL1)
+                    videoData.url2 = avObject.getString(Constant.AVOBJECT_URL2)
                     videoData.title = ""
                     videoData.startTime = ""
                     videoData.endTime = ""
@@ -70,7 +69,7 @@ class MyApplication : Application() {
                         sharedPreferences = MySharePreferences.getInstance(context)
                     }
 
-                    sharedPreferences?.putString(Entity.MEDIA_DATA, gson!!.toJson(videoDataList))
+                    sharedPreferences?.putString(Constant.MEDIA_DATA, gson!!.toJson(videoDataList))
                 } else {
                     setLocalVideoData()
                 }
@@ -103,7 +102,7 @@ class MyApplication : Application() {
             sharedPreferences = MySharePreferences.getInstance(context)
         }
 
-        val mediaData = sharedPreferences!!.getString(Entity.MEDIA_DATA)
+        val mediaData = sharedPreferences!!.getString(Constant.MEDIA_DATA)
 
         if (mediaData!!.isEmpty()) {
             var result = ""
@@ -119,7 +118,7 @@ class MyApplication : Application() {
             }
 
             if (result.isNotEmpty()) {
-                sharedPreferences?.putString(Entity.MEDIA_DATA, result)
+                sharedPreferences?.putString(Constant.MEDIA_DATA, result)
             }
         }
 
@@ -133,7 +132,7 @@ class MyApplication : Application() {
         if (gson == null) {
             gson = Gson()
         }
-        val mediaData = sharedPreferences!!.getString(Entity.MEDIA_DATA)
+        val mediaData = sharedPreferences!!.getString(Constant.MEDIA_DATA)
         if (mediaData != "") {
             channelsBeans = gson!!.fromJson(mediaData,
                     object : TypeToken<List<VideoDataModelNew>>() {
@@ -147,28 +146,28 @@ class MyApplication : Application() {
         if (sharedPreferences == null) {
             sharedPreferences = MySharePreferences.getInstance(context)
         }
-        sharedPreferences!!.putString(Entity.LAST_MEDIA_ID, id)
+        sharedPreferences!!.putString(Constant.LAST_MEDIA_ID, id)
     }
 
     fun getLastId(context: Context): String? {
         if (sharedPreferences == null) {
             sharedPreferences = MySharePreferences.getInstance(context)
         }
-        return sharedPreferences!!.getString(Entity.LAST_MEDIA_ID)
+        return sharedPreferences!!.getString(Constant.LAST_MEDIA_ID)
     }
 
     fun setLastUrl(context: Context, url: String) {
         if (sharedPreferences == null) {
             sharedPreferences = MySharePreferences.getInstance(context)
         }
-        sharedPreferences!!.putString(Entity.LAST_MEDIA_URL, url)
+        sharedPreferences!!.putString(Constant.LAST_MEDIA_URL, url)
     }
 
     fun getLastUrl(context: Context): String? {
         if (sharedPreferences == null) {
             sharedPreferences = MySharePreferences.getInstance(context)
         }
-        return sharedPreferences!!.getString(Entity.LAST_MEDIA_URL)
+        return sharedPreferences!!.getString(Constant.LAST_MEDIA_URL)
     }
 
     companion object {

@@ -5,8 +5,6 @@ import android.animation.Animator
 import android.animation.ValueAnimator
 import android.app.Activity
 import android.app.AlertDialog
-import android.app.Dialog
-import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -16,19 +14,18 @@ import android.os.Handler
 import android.os.Message
 import android.provider.Settings
 import android.util.Log
-import android.view.View
-import android.view.Window
 import android.widget.TextView
+import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.lvvi.vividtv.R
+import com.lvvi.vividtv.utils.Constant
 import com.lvvi.vividtv.utils.MyApplication
+import com.lvvi.vividtv.utils.MySharePreferences
 import com.lvvi.vividtv.utils.Utils
 import java.lang.ref.WeakReference
 
-/**
- * Created by lvliheng on 16/11/24.
- */
 class SplashActivity : Activity() {
 
     private lateinit var splashMeetDaysTv: TextView
@@ -38,70 +35,36 @@ class SplashActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        requestWindowFeature(Window.FEATURE_NO_TITLE)
         setContentView(R.layout.activity_splash_view)
-        hideVirtualButton()
         initView()
-        startMeetDaysAnimation()
-        startBirthDaysAnimation()
+        startAnimation()
     }
 
-    private fun hideVirtualButton() {
-        val decorView = window.decorView
-        val uiOptions = (View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or View.SYSTEM_UI_FLAG_FULLSCREEN)
-        decorView.systemUiVisibility = uiOptions
-    }
+    private fun startAnimation() {
+        val animator = ValueAnimator.ofInt(0, Utils.meetDays)
 
-    private fun startMeetDaysAnimation() {
-        val animator = ValueAnimator()
-        animator.setObjectValues(0, Utils.meetDays)
         animator.duration = ANIMATION_DURATION.toLong()
-        animator.addUpdateListener { animation -> splashMeetDaysTv.text =
-                animation.animatedValue.toString() }
+
+        animator.addUpdateListener { animation ->
+            splashMeetDaysTv.text = animation.animatedValue.toString()
+
+            if (animation.animatedValue as Int <= Utils.birthDays) {
+                splashBirthDaysTv.text = animation.animatedValue.toString()
+            }
+        }
+
         animator.addListener(object : Animator.AnimatorListener {
             override fun onAnimationStart(animation: Animator) {
-
             }
 
             override fun onAnimationEnd(animation: Animator) {
-                splashMeetDaysTv.tag = ""
-                handler.sendEmptyMessageDelayed(HANDLER_INTENT_MAIN, HANDLER_DELAY_MILLIS.toLong())
+                handler.sendEmptyMessageDelayed(HANDLER_ANIMATION_ENDED, HANDLER_DELAY_MILLIS.toLong())
             }
 
             override fun onAnimationCancel(animation: Animator) {
-
             }
 
             override fun onAnimationRepeat(animation: Animator) {
-
-            }
-        })
-        animator.start()
-    }
-
-    private fun startBirthDaysAnimation() {
-        val animator = ValueAnimator()
-        animator.setObjectValues(0, Utils.birthDays)
-        animator.duration = ANIMATION_DURATION.toLong()
-        animator.addUpdateListener { animation -> splashBirthDaysTv.text =
-                animation.animatedValue.toString() }
-        animator.addListener(object : Animator.AnimatorListener {
-            override fun onAnimationStart(animation: Animator) {
-
-            }
-
-            override fun onAnimationEnd(animation: Animator) {
-                splashBirthDaysTv.tag = ""
-                handler.sendEmptyMessageDelayed(HANDLER_INTENT_MAIN, HANDLER_DELAY_MILLIS.toLong())
-            }
-
-            override fun onAnimationCancel(animation: Animator) {
-
-            }
-
-            override fun onAnimationRepeat(animation: Animator) {
-
             }
         })
         animator.start()
@@ -121,19 +84,26 @@ class SplashActivity : Activity() {
             super.handleMessage(msg)
             val activity = weakReference.get()?:return
             when (msg.what) {
-                HANDLER_INTENT_MAIN -> if (activity.splashMeetDaysTv.tag != null
-                        && activity.splashBirthDaysTv.tag != null) {
-                    activity.intentToMainActivity()
+                HANDLER_ANIMATION_ENDED -> {
+                    activity.animationEnded()
                 }
             }
         }
     }
 
-    private fun intentToMainActivity() {
+    private fun animationEnded() {
+        //phone
+        if (MySharePreferences.getInstance(this).getString(Constant.NEED_CHECK_PERMISSION).isNullOrEmpty()) {
+            checkPermission()
+        } else {
+            intentToMainActivity()
+        }
+    }
+
+    private fun checkPermission() {
         if (!isPermissionEnabled()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
-                startActivityForResult(intent, PERMISSION_REQUEST_WRITE_SETTINGS)
+                showDialog()
             } else {
                 ActivityCompat.requestPermissions(
                     this,
@@ -142,27 +112,64 @@ class SplashActivity : Activity() {
                 )
             }
         } else {
-            splashMeetDaysTv.tag = null
-            splashBirthDaysTv.tag = null
-
-            val intent = Intent()
-            intent.setClass(this@SplashActivity, MediaPlayerActivity::class.java)
-
-            val channelsBeans = MyApplication.get().getVideoData(this@SplashActivity)
-            val lastId = MyApplication.get().getLastId(this@SplashActivity)
-            var lastUrl = MyApplication.get().getLastUrl(this@SplashActivity)
-            if (lastUrl == "" && channelsBeans.isNotEmpty()
-                && channelsBeans[0].url1!!.isNotEmpty()) {
-                lastUrl = channelsBeans[0].url1
-            }
-            intent.putExtra(MediaPlayerActivity.EXTRA_ID, lastId)
-            intent.putExtra(MediaPlayerActivity.EXTRA_URL, lastUrl)
-
-            startActivity(intent)
-
-            finish()
-            overridePendingTransition(R.anim.fade_in, R.anim.no_change)
+            intentToMainActivity()
         }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.M)
+    private fun showDialog() {
+        MySharePreferences.getInstance(this).putString(Constant.NEED_CHECK_PERMISSION, "0")
+
+        val builder = AlertDialog.Builder(this)
+
+        builder.setTitle(getString(R.string.dialog_title))
+        builder.setMessage(getString(R.string.dialog_message))
+
+        builder.setNegativeButton(getString(R.string.dialog_negative_button)) { p0, _ ->
+            p0?.dismiss()
+            Toast.makeText(this, getString(R.string.permission_tip), Toast.LENGTH_LONG).show()
+            intentToMainActivity()
+        }
+
+        builder.setPositiveButton(getString(R.string.dialog_positive_button)) { p0, _ ->
+            p0?.dismiss()
+            intentToSettings()
+        }
+
+        builder.setCancelable(true)
+
+        val dialog = builder.create()
+        dialog.show()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.M)
+    private fun intentToSettings() {
+        val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
+        intent.data = Uri.parse("package:$packageName")
+        startActivityForResult(intent, PERMISSION_REQUEST_WRITE_SETTINGS)
+    }
+
+    private fun intentToMainActivity() {
+        splashMeetDaysTv.tag = null
+        splashBirthDaysTv.tag = null
+
+        val intent = Intent()
+        intent.setClass(this@SplashActivity, MediaPlayerActivity::class.java)
+
+        val channelsBeans = MyApplication.get().getVideoData(this@SplashActivity)
+        val lastId = MyApplication.get().getLastId(this@SplashActivity)
+        var lastUrl = MyApplication.get().getLastUrl(this@SplashActivity)
+        if (lastUrl == "" && channelsBeans.isNotEmpty()
+            && channelsBeans[0].url1!!.isNotEmpty()) {
+            lastUrl = channelsBeans[0].url1
+        }
+        intent.putExtra(MediaPlayerActivity.EXTRA_ID, lastId)
+        intent.putExtra(MediaPlayerActivity.EXTRA_URL, lastUrl)
+
+        startActivity(intent)
+
+        finish()
+        overridePendingTransition(R.anim.fade_in, R.anim.no_change)
     }
 
     private fun isPermissionEnabled(): Boolean {
@@ -171,18 +178,6 @@ class SplashActivity : Activity() {
         } else {
             ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_SETTINGS) ==
                     PackageManager.PERMISSION_GRANTED
-        }
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        when (requestCode) {
-            PERMISSION_REQUEST_WRITE_SETTINGS -> {
-                intentToMainActivity()
-            }
         }
     }
 
@@ -197,7 +192,7 @@ class SplashActivity : Activity() {
 
     companion object {
 
-        private const val HANDLER_INTENT_MAIN = 0
+        private const val HANDLER_ANIMATION_ENDED = 0
         private const val HANDLER_DELAY_MILLIS = 1000
 
         private const val ANIMATION_DURATION = 2000

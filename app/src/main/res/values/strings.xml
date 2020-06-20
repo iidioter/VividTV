@@ -6,4 +6,10 @@
     <string name="exit_tip">再按一次退出</string>
     <string name="cant_play_tip">该频道无法播放</string>
     <string name="try_other_line_tip">正在尝试其他线路…</string>
+
+    <string name="dialog_title">提示</string>
+    <string name="dialog_message">需要使用手势调节亮度和音量吗？</string>
+    <string name="dialog_negative_button">不需要</string>
+    <string name="dialog_positive_button">设置</string>
+    <string name="permission_tip">您可以根据需要前往设置页面修改权限</string>
 </resources>
