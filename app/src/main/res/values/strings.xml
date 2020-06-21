@@ -12,4 +12,5 @@
     <string name="dialog_negative_button">不需要</string>
     <string name="dialog_positive_button">设置</string>
     <string name="permission_tip">您可以根据需要前往设置页面修改权限</string>
+    <string name="not_update">待更新</string>
 </resources>

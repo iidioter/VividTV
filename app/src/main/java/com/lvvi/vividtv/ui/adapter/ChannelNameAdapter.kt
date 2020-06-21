@@ -7,13 +7,11 @@ import android.widget.BaseAdapter
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import com.lvvi.vividtv.R
 import com.lvvi.vividtv.model.VideoDataModelNew
 
 
-/**
- * Created by lvliheng on 2018/7/3 at 18:56.
- */
 class ChannelNameAdapter(private val context: Context) : BaseAdapter() {
     private var channelsBeans: List<VideoDataModelNew>? = null
     private var currId: String? = null
@@ -60,11 +58,9 @@ class ChannelNameAdapter(private val context: Context) : BaseAdapter() {
         }
 
         if (checkedPosition == i) {
-            viewHolder.mainLl!!.setBackgroundColor(
-                    context.resources.getColor(R.color.info_bg_color))
+            viewHolder.mainLl!!.setBackgroundColor(ContextCompat.getColor(context, R.color.info_bg_color))
         } else {
-            viewHolder.mainLl!!.setBackgroundColor(
-                    context.resources.getColor(android.R.color.transparent))
+            viewHolder.mainLl!!.setBackgroundColor(ContextCompat.getColor(context, android.R.color.transparent))
         }
 
         viewHolder.nameTv!!.text = channelsBeans!![i].name

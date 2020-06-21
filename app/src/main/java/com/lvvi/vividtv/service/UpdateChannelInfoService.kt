@@ -3,15 +3,20 @@ package com.lvvi.vividtv.service
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
+import android.util.Log
+import androidx.core.util.rangeTo
 import com.lvvi.vividtv.model.ChannelInfoModel
 import com.lvvi.vividtv.model.VideoDataModelNew
 import com.lvvi.vividtv.utils.HttpHelper
 import com.lvvi.vividtv.utils.MySharePreferences
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.lvvi.vividtv.R
 import com.lvvi.vividtv.utils.Constant
+import com.lvvi.vividtv.utils.MyApplication
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.math.log
 
 class UpdateChannelInfoService : Service() {
 
@@ -35,15 +40,18 @@ class UpdateChannelInfoService : Service() {
     private fun getChannelInfo() {
         HttpHelper.get().request(Constant.CHANNEL_INFO_API_ALL, object : HttpHelper.HttpCallBack {
             override fun onSuccess(result: String) {
+                Log.e("service", "onSuccess")
                 updateChannelInfo(result)
             }
 
             override fun onFailure(msg: String) {
-
+                Log.e("service", "onFailure $msg")
+                getDataFailed()
             }
 
             override fun onError(msg: String) {
-
+                Log.e("service", "onError $msg")
+                getDataFailed()
             }
         })
     }
@@ -60,9 +68,7 @@ class UpdateChannelInfoService : Service() {
         val mediaData = sharedPreferences!!.getString(Constant.MEDIA_DATA)
         if (mediaData != "") {
             channelsBeans = gson!!.fromJson(mediaData,
-                    object : TypeToken<List<VideoDataModelNew>>() {
-
-                    }.type)
+                    object : TypeToken<List<VideoDataModelNew>>() {}.type)
         }
 
         var channelInfoModel = ChannelInfoModel()
@@ -98,15 +104,16 @@ class UpdateChannelInfoService : Service() {
         }
         sharedPreferences!!.putString(Constant.MEDIA_DATA, gson!!.toJson(channelsBeans))
 
+        startTimer()
+    }
+
+    private fun startTimer() {
         val delay = 2 * 60 * 1000
         nextUpdateTime += delay.toLong()
         if (nextUpdateTime < delay) {
             nextUpdateTime = delay.toLong()
         }
-        startTimer()
-    }
 
-    private fun startTimer() {
         if (timer == null) {
             timer = Timer()
         }
@@ -115,6 +122,21 @@ class UpdateChannelInfoService : Service() {
                 getChannelInfo()
             }
         }, nextUpdateTime)
+    }
+
+    fun getDataFailed() {
+        val channelsBeans = MyApplication.get().getVideoData(applicationContext)
+        for (bean in channelsBeans) {
+            if (!bean.endTime.isNullOrEmpty() && bean.endTime!!.toInt() < System.currentTimeMillis() / 1000) {
+                bean.startTime = "0"
+                bean.endTime = "0"
+                bean.title = getString(R.string.not_update)
+            }
+        }
+        sharedPreferences!!.putString(Constant.MEDIA_DATA, Gson().toJson(channelsBeans))
+
+        nextUpdateTime = 0
+        startTimer()
     }
 
     override fun onDestroy() {
