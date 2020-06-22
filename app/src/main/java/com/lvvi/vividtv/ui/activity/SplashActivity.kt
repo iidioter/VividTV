@@ -195,7 +195,7 @@ class SplashActivity : Activity() {
         private const val HANDLER_ANIMATION_ENDED = 0
         private const val HANDLER_DELAY_MILLIS = 1000
 
-        private const val ANIMATION_DURATION = 2000
+        private const val ANIMATION_DURATION = 3000
 
         const val PERMISSION_REQUEST_WRITE_SETTINGS = 0
     }

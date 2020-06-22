@@ -27,14 +27,15 @@ class UpdateChannelInfoService : Service() {
 
     private var timer: Timer? = null
 
-    override fun onCreate() {
-        super.onCreate()
-        nextUpdateTime = 0
-        getChannelInfo()
-    }
-
     override fun onBind(intent: Intent): IBinder? {
         return null
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.e("service", "onStartCommand")
+        nextUpdateTime = 0
+        getChannelInfo()
+        return START_STICKY
     }
 
     private fun getChannelInfo() {

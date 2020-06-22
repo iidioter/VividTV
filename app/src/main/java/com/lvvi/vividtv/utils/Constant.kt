@@ -44,7 +44,7 @@ object Constant {
 
     const val LEANCLOUD_APP_ID = "jn3T5WIHvGJN53R4DnD2wlLN-MdYXbMMI"
     const val LEANCLOUD_APP_KEY = "tKdmdQYynhfcxoMgto3o89L1"
-    const val AVOBJECT_CLASS_NAME = "video_data"
+    const val AVOBJECT_CLASS_VIDEO_DATA = "video_data"
     const val AVOBJECT_ID = "id"
     const val AVOBJECT_ORDER = "order"
     const val AVOBJECT_NAME = "name"

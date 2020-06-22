@@ -3,6 +3,7 @@ package com.lvvi.vividtv.utils
 import android.app.Application
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import cn.leancloud.AVOSCloud
 import cn.leancloud.AVObject
 import cn.leancloud.AVQuery
@@ -39,15 +40,17 @@ class MyApplication : Application() {
     }
 
     private fun setVideoData() {
-        val query = AVQuery<AVObject>(Constant.AVOBJECT_CLASS_NAME)
+        val query = AVQuery<AVObject>(Constant.AVOBJECT_CLASS_VIDEO_DATA)
         query.addAscendingOrder(Constant.AVOBJECT_ORDER)
         query.whereEqualTo(Constant.IS_SHOW, "1")
 
         query.findInBackground().subscribe(object : Observer<List<AVObject>> {
             override fun onSubscribe(d: Disposable) {
+                Log.e("application", "setVideoData onSubscribe")
             }
 
             override fun onNext(avObjects: List<AVObject>) {
+                Log.e("application", "setVideoData onNext")
                 val videoDataList = ArrayList<VideoDataModelNew>()
                 var videoData : VideoDataModelNew?
                 for (avObject in avObjects) {
@@ -78,11 +81,13 @@ class MyApplication : Application() {
             }
 
             override fun onError(e: Throwable) {
+                Log.e("application", "setVideoData onError")
                 setLocalVideoData()
                 startUpdateChannelInfoService()
             }
 
             override fun onComplete() {
+                Log.e("application", "setVideoData onComplete")
             }
         })
     }
