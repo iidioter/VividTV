@@ -16,6 +16,4 @@ Vivid TV--Android电视直播应用
 
 ### 预览：
 
-![](https://github.com/lvliheng/VividTv/blob/master/screenshots/device-2019-07-30-213629.png)
-
-![](https://github.com/lvliheng/VividTv/blob/master/screenshots/device-2019-08-01-123750.png)
+![](https://github.com/lvliheng/VividTv/blob/master/screenshots/vividtv.gif)
