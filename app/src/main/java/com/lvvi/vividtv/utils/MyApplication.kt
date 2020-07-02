@@ -1,8 +1,11 @@
 package com.lvvi.vividtv.utils
 
 import android.app.Application
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
+import android.os.IBinder
 import android.util.Log
 import cn.leancloud.AVOSCloud
 import cn.leancloud.AVObject
@@ -73,29 +76,24 @@ class MyApplication : Application() {
                     }
 
                     sharedPreferences?.putString(Constant.MEDIA_DATA, gson!!.toJson(videoDataList))
+                    Log.e("service", "size: ${videoDataList.size}")
                 } else {
                     setLocalVideoData()
                 }
 
-                startUpdateChannelInfoService()
+//                startUpdateChannelInfoService()
             }
 
             override fun onError(e: Throwable) {
                 Log.e("application", "setVideoData onError")
                 setLocalVideoData()
-                startUpdateChannelInfoService()
+//                startUpdateChannelInfoService()
             }
 
             override fun onComplete() {
                 Log.e("application", "setVideoData onComplete")
             }
         })
-    }
-
-    private fun startUpdateChannelInfoService() {
-        val updateChannelInfoService = Intent()
-        updateChannelInfoService.setClass(context, UpdateChannelInfoService::class.java)
-        startService(updateChannelInfoService)
     }
 
     private fun setLocalVideoData() {

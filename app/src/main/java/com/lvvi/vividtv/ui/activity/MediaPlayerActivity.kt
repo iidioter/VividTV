@@ -3,15 +3,15 @@ package com.lvvi.vividtv.ui.activity
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.media.MediaPlayer
-import android.os.Build
-import android.os.Bundle
-import android.os.Handler
-import android.os.Message
+import android.net.Uri
+import android.os.*
 import android.provider.Settings
 import android.util.DisplayMetrics
 import android.util.Log
@@ -30,6 +30,7 @@ import java.io.IOException
 import java.lang.ref.WeakReference
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.HashMap
 import kotlin.math.abs
 import kotlin.math.round
 
@@ -69,6 +70,7 @@ class MediaPlayerActivity : Activity(),
     private lateinit var handler: MyHandler
     private lateinit var toast: Toast
 
+    private lateinit var connection: ServiceConnection
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,10 +81,26 @@ class MediaPlayerActivity : Activity(),
         initData()
     }
 
+    override fun onStart() {
+        super.onStart()
+        bindService()
+    }
+
     override fun onResume() {
-        Log.e("media player activity", "onResume")
         super.onResume()
         initPlayer()
+    }
+
+    private fun bindService() {
+        connection = object : ServiceConnection {
+            override fun onServiceDisconnected(p0: ComponentName?) {
+            }
+
+            override fun onServiceConnected(p0: ComponentName?, p1: IBinder?) {
+            }
+        }
+        Intent(this, UpdateChannelInfoService::class.java)
+            .also { intent ->  bindService(intent, connection, Context.BIND_AUTO_CREATE) }
     }
 
     private fun initView() {
@@ -611,7 +629,6 @@ class MediaPlayerActivity : Activity(),
     }
 
     override fun onPause() {
-        Log.e("media player activity", "onPause")
         super.onPause()
         if (mediaPlayer != null) {
             if (mediaPlayer?.isPlaying!!) {
@@ -621,7 +638,6 @@ class MediaPlayerActivity : Activity(),
     }
 
     override fun onStop() {
-        Log.e("media player activity", "onStop")
         super.onStop()
         closeMenu()
         if (handler.hasMessages(HANDLER_AUTO_CLOSE_INFO)) {
@@ -634,14 +650,7 @@ class MediaPlayerActivity : Activity(),
             mediaPlayer?.release()
             mediaPlayer = null
         }
-    }
-
-    override fun onDestroy() {
-        val updateChannelInfoService = Intent()
-        updateChannelInfoService.setClass(this@MediaPlayerActivity,
-                UpdateChannelInfoService::class.java)
-        stopService(updateChannelInfoService)
-        super.onDestroy()
+        unbindService(connection)
     }
 
     companion object {

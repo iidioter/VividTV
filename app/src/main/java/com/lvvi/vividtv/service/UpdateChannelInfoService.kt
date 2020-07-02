@@ -2,6 +2,7 @@ package com.lvvi.vividtv.service
 
 import android.app.Service
 import android.content.Intent
+import android.os.Binder
 import android.os.IBinder
 import android.util.Log
 import androidx.core.util.rangeTo
@@ -28,30 +29,22 @@ class UpdateChannelInfoService : Service() {
     private var timer: Timer? = null
 
     override fun onBind(intent: Intent): IBinder? {
-        return null
-    }
-
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.e("service", "onStartCommand")
         nextUpdateTime = 0
         getChannelInfo()
-        return START_STICKY
+        return null
     }
 
     private fun getChannelInfo() {
         HttpHelper.get().request(Constant.CHANNEL_INFO_API_ALL, object : HttpHelper.HttpCallBack {
             override fun onSuccess(result: String) {
-                Log.e("service", "onSuccess")
                 updateChannelInfo(result)
             }
 
             override fun onFailure(msg: String) {
-                Log.e("service", "onFailure $msg")
                 getDataFailed()
             }
 
             override fun onError(msg: String) {
-                Log.e("service", "onError $msg")
                 getDataFailed()
             }
         })
