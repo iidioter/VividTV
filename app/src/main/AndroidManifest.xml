@@ -42,7 +42,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".ui.activity.MediaPlayerActivity"
-            android:screenOrientation="landscape"/>
+                  android:launchMode="singleTop"
+                  android:screenOrientation="landscape"/>
 
         <service android:name=".service.UpdateChannelInfoService"/>
     </application>

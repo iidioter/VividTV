@@ -127,6 +127,10 @@ class UpdateChannelInfoService : Service() {
                 bean.title = getString(R.string.not_update)
             }
         }
+
+        if (sharedPreferences == null) {
+            sharedPreferences = MySharePreferences.getInstance(applicationContext)
+        }
         sharedPreferences!!.putString(Constant.MEDIA_DATA, Gson().toJson(channelsBeans))
 
         nextUpdateTime = 0
